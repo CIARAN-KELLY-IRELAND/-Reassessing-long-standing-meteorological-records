@@ -1,0 +1,275 @@
+---
+title: "Data processing and data visualisation of Historic station data"
+author: "Ciaran Kelly"
+date: "8/25/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# **Introduction**# 
+The 2019-20 class of the MSc Climate Change at Maynooth University were set a group assignment to re-evalaute extreme heat temperature records using Ireland as a proxy. The following script will produce Time series plot, Station Location Map and Frequency Distribution Plots. This script was produced by Ciaran Kelly & Natascha Seifert. All data used in this paper is attached as .csv files in Station_Investigation.zip folder
+
+# **Time Series 1 **#  
+To complie the time series plot tmax data for the month of June 1887 was extracted from a .xsl file 
+named (All_Tmax_data) sourced from knmi explorer and met eireann. 
+The data was then inserted into a new .csv file for ease of use and named (Time_1887.csv"). 
+The folllowing codes produce time series. 
+
+```{r}
+# install.packages("gghighlight")
+# install.packages("extrafont")
+library(ggplot2)
+library(reshape2)
+library(gghighlight)
+library(dplyr)
+library(tidyverse)
+library(ncdf4) # package for netcdf manipulation
+library(raster) # package for raster manipulation
+library(rgdal) # package for geospatial analysis
+library(ggplot2) # package for plotting
+#install.packages("weathermetrics")
+library(weathermetrics)
+library(rnaturalearth)       
+library(rnaturalearthdata)
+#install.packages("rcartocolor")
+library(rcartocolor)
+library(metR)
+library(gridExtra)
+library(grid)
+```
+
+# Important .csv file that contains 1887 tmax data and save as a named data file ie:Time
+```{r}
+Time <-read.csv("C:/Eire_Tmax_Investigation/Data_sets/Time_1887.csv")
+Time <- Time[,1:8]#change number to suit amount of coloums
+names(Time)
+```
+
+# Reshape 1887 tmax data from wide to long
+```{r}
+df.melt <- melt(Time, id.vars=c("Year"))
+head(df.melt)
+df.melt <- na.omit(df.melt) 
+df.melt = rename(df.melt, Stations = variable)
+```
+# Plot Time series for 1887
+```{r}
+df.melta <- ggplot(df.melt, aes(x=Year , y=value, col=Stations)) +
+  geom_line(size = 1)+
+  xlab('June') +
+  ylab('Temperature (°C)')+
+  scale_y_continuous(limits = c(10,36), breaks=seq(10,36,2)) +
+  scale_x_continuous(limits = c(1,31), breaks=seq(1,31,1))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggtitle("Max Temperature 1887") +
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme_bw()+ geom_point(aes(x=26, y=33.3), 
+             shape = 21, colour = "black", fill = "red", size = 2.5, stroke =1.5)
+df.melta
+```
+
+# Overlay point data frame A ontop of data frame gg1 and save in plots folder with a res=300
+```{r}
+png("Time_Series_1887.png", width = 12, height = 9, units = 'in', res = 300)
+plot(df.melta)
+```
+
+# **Time Series 2 **#
+# Important .csv file that contains 1887 tmax data and save as a named data file ie:Time
+```{r}
+Time <-read.csv("C:/Eire_Tmax_Investigation/Data_sets/Dublin_1876.csv")
+Time <- Time[,1:4]#change number to suit amount of coloums
+names(Time)
+```
+
+# Reshape 1887 tmax data from wide to long
+```{r}
+df.melt <- melt(Time, id.vars=c("Year"))
+head(df.melt)
+df.melt <- na.omit(df.melt) 
+df.melt = rename(df.melt, Stations = variable)
+```
+# Plot Time series for 1887
+```{r}
+df.melta <- ggplot(df.melt, aes(x=Year , y=value, col=Stations)) +
+  geom_line(size = 1)+
+  xlab('June') +
+  ylab('Temperature (°C)')+
+  scale_y_continuous(limits = c(10,36), breaks=seq(10,36,2)) +
+  scale_x_continuous(limits = c(1,31), breaks=seq(1,31,1))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggtitle("Max Temperature Dublin 1876") +
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme_bw()
+df.melta
+```
+
+
+
+# Overlay point data frame A ontop of data frame gg1 and save in plots folder with a res=300
+```{r}
+png("Time_Series_1876.png", width = 12, height = 9, units = 'in', res = 300)
+plot(df.melta)
+```
+
+# **Station Location Map 1 **#
+The following codes will produce a Station Location Map 1 for all the station used in this research. 
+
+```{r}
+library(ggspatial)
+library(sf)
+library(rnaturalearth)       
+library(rnaturalearthdata)
+library("ggplot2")
+library("rgeos")
+```
+
+## Load data frame from the (rnaturalearthdata) library ##
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+class(world)
+```
+## generate world map set the xlim & ylim to your coordinates and save as a named data file ie: gg1##
+```{r}
+gg1 <-ggplot(data=world)+
+  geom_sf(color = "black", fill = "lightgreen") +
+  labs( x = "Longitude", y = "Latitude") +
+  ggtitle("Station Location 1887") +
+  coord_sf(xlim = c(-11, 2), ylim = c(50,60), expand = FALSE) +
+  annotation_scale(location = "bl", width_hint = 0.3) +
+  annotation_north_arrow(location = "tl", which_north = "true",  
+                         height = unit(2.5, "cm"),
+                         width = unit(2.5, "cm"),
+                         pad_x = unit(0.01, "in"), pad_y = unit(0.22, "in"),
+                         style = north_arrow_fancy_orienteering) +
+  theme(text=element_text(family="Arial",face="bold", size=9))+
+theme_bw()
+```
+## Create point data to be overlayed on the map as a named data frame called A ##
+```{r}
+A <- data.frame(
+  long = c(-6.65, -8.47, -6.3192, -7.88, -8.2208,-1.49, -7.254),
+  lat = c(54.35, 54.13, 53.3639, 53.08,51.7953,53.381, 52.661 ),
+  Stations = c("Armagh","Markree","Phoenix Park","Birr", "Roches Point","Sheffield", "Kilkenny"),
+  stringsAsFactors = FALSE
+)  
+```
+## Overlay point data frame A ontop of data frame gg1 ##
+```{r}
+gg1 + 
+  geom_point(data = A, aes(x = long, y = lat, color=Stations) , size = 2.5)
+```
+# **Station Location Map 2** #
+
+
+## Load data frame from the (rnaturalearthdata) library
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+class(world)
+```
+## generate world map set the xlim & ylim to your coordinates and save as a named data file ie: gg1
+```{r}
+gg1 <-ggplot(data=world)+
+  geom_sf(color = "black", fill = "lightgreen") +
+  labs( x = "Longitude", y = "Latitude") +
+  ggtitle("Station Location 1876") +
+  coord_sf(xlim = c(-11, -5), ylim = c(51,56), expand = FALSE) +
+  annotation_scale(location = "bl", width_hint = 0.3) +
+  annotation_north_arrow(location = "tl", which_north = "true",  
+                         height = unit(2.5, "cm"),
+                         width = unit(2.5, "cm"),
+                         pad_x = unit(0.01, "in"), pad_y = unit(0.22, "in"),
+                         style = north_arrow_fancy_orienteering) +
+  theme(text=element_text(family="Arial", size=9))+
+theme_bw()
+```
+# Create point data to be overlayed on the map as a named data frame called A
+```{r}
+A <- data.frame(
+  long = c(-7.73, -7.36, -7.2, -7.25, -7.13, -7.82, -7.88, -7.93),
+  lat = c(53.22, 53.47, 53.19, 53.39, 53.11 , 52.65, 53.08, 53.66),
+  Stations = c("Boora","Mullingar","Clonsast Bord Na Mona","Derrygreenagh", "Ballybrittas", "Thurles", "Birr", "Lanesboro"),
+  stringsAsFactors = FALSE
+)  
+```
+# Overlay point data frame A ontop of data frame gg1
+```{r}
+gg1 + 
+  geom_point(data = A, aes(x = long, y = lat, color=Stations) , size = 2.5)
+```
+#** Station Investigation Histogram **#
+#*
+```{r}
+setwd("C:/Eire_Tmax_Investigation/Data_sets/")
+```
+# The following codes complie the Frequency Distribution Plots 
+
+#preamble: load package, clear variables, setwd
+```{r}
+library(tidyverse)
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+```
+
+
+```{r}
+# Makree
+M <-read.csv("C:/Eire_Tmax_Investigation/Data_sets/markree.csv")
+Mhist <- ggplot(M, aes(ï..Markree)) +
+  geom_histogram() +labs(y= "Frequency", x = "Markree (JJA, 2010-2019)") +
+  geom_point(aes(x=9.9, y=2.5), 
+             shape = 21, colour = "black", fill = "red", size = 2.5, stroke =1.5)+ 
+theme(text=element_text(family="Arial",face="bold", size=9))+
+theme_bw()
+
+# Sheffield
+S <-read.csv("C:/Eire_Tmax_Investigation/Data_sets/sheffield.csv")
+Shist <- ggplot(S, aes(ï..sheffield)) +
+  geom_histogram() + labs(y= "Frequency", x = "Sheffield (JJA, 2010-2017)") +
+  geom_point(aes(x=9.4, y=2.5), 
+             shape = 21, colour = "black", fill = "red", size = 2.5, stroke =1.5)+ 
+  theme(text=element_text(family="Arial",face="bold", size=9))+
+theme_bw()
+
+# PP
+P <-read.csv("C:/Eire_Tmax_Investigation/Data_sets/pp.csv")
+Phist <- ggplot(P, aes(ï..phoenixpark)) +
+  geom_histogram() +labs(y= "Frequency", x = "Phoenix Park (JJA, 2013-2019)") + 
+  geom_point(aes(x=9, y=2.5), 
+             shape = 21, colour = "black", fill = "red", size = 2.5, stroke =1.5)+ 
+  theme(text=element_text(family="Arial",face="bold", size=9))+
+theme_bw()
+
+# Roches Roint
+R <-read.csv("C:/Eire_Tmax_Investigation/Data_sets/rpoint.csv")
+Rhist <- ggplot(R, aes(ï..rochespoint)) +
+  geom_histogram()  +labs(y= "Frequency", x = "Roches Point (JJA, 2010-2019)") + 
+  geom_point(aes(x=6.6, y=2.5), 
+             shape = 21, colour = "black", fill = "red", size = 2.5, stroke =1.5)+ 
+  theme(text=element_text(family="Arial",face="bold", size=9))+
+theme_bw()
+
+# Armagh
+A <-read.csv("C:/Eire_Tmax_Investigation/Data_sets/armagh.csv")
+Ahist <- ggplot(A, aes(ï..Armagh)) +
+  geom_histogram()  +labs(y= "Frequency", x = "Armagh (JJA, 2010-2018)") + 
+  geom_point(aes(x=6.4, y=2.5), 
+             shape = 21, colour = "black", fill = "red", size = 2.5, stroke =1.5)+ 
+  theme(text=element_text(family="Arial",face="bold", size=9))+
+theme_bw()
+```
+### combine them together
+```{r}
+library(ggplot2)
+grid.arrange(Mhist, Shist, Phist, Rhist, Ahist, nrow = 2, top = "Tmax (°C) JJA Frequency Distribution 2010-2019")+ 
+  theme(text=element_text(family="Arial",face="bold", size=9))+theme_bw()
+
+```

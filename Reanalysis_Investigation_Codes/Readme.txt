@@ -1,0 +1,1 @@
+This folder contains the R script and a Rmarkdown HTML of the process used to aggregate and process the netcdf files obtained from ERA5 and NOAA 20TH Reanalysis data.

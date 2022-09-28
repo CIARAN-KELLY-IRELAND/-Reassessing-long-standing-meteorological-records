@@ -1,0 +1,1 @@
+This folder contains the R script and a Rmarkdown HTML of the process used to aggregate and process the CSV files obtained from Met Eireann and the UK Met Office.
